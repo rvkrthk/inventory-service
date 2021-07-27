@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: invsvc
+  labels:
+    app: invsvc
+spec:
+  ports:
+    - port: 8080
+  selector:
+    app: invsvc
+    tier: frontend
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invsvc
+  labels:
+    app: invsvc
+spec:
+  selector:
+    matchLabels:
+      app: invsvc
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: invsvc
+        tier: frontend
+    spec:
+      containers:
+      - image:  rbodicherla/inventory-service:latest
+        name: invsvc
+        env:
+        - name: MYSQL_SERVER
+          value: invsvc-mysql
+        ports:
+        - containerPort: 8080
+          name: invsvc

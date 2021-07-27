@@ -9,5 +9,6 @@ ENV MYSQL_SERVER='localhost'
 ENV MYSQL_DATABASE='qtinvsrv'
 EXPOSE 8080
 WORKDIR ${HOME_DIR}
+RUN apk add build-base
 RUN pip install -r requirements.txt
 ENTRYPOINT [ "python", "app.py" ]

@@ -1,45 +1,34 @@
-from flask import Flask,jsonify
-import os
-import logging
-from flask_restplus import Api, Resource
-from models import db, Product
-import parsers
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_restx import Api, Resource, fields
+import utils
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-username = os.getenv('MYSQL_USERNAME', 'qtdevops')
-password = os.getenv('MYSQL_PASSWORD', 'qtdevops')
-server = os.getenv('MYSQL_SERVER', 'localhost')
-database = os.getenv('MYSQL_DATABASE', 'inventoryservicedb')
-DATABASE_URI = f"mysql+pymysql://{username}:{password}@{server}/{database}"
-app.logger.debug(f"Database uri is {DATABASE_URI}")
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-app.config['SQLALCHEMY_ECHO'] = True
-db.init_app(app)
+app.config.from_object('config.Config')
 
-api = Api(app, version='0.0.1', title='Inventory Service', description='Sample microservice for kubernetes')
+db = SQLAlchemy(app)
+class Product(db.Model):
+    id = db.Column('id', db.Integer,primary_key = True)
+    name = db.Column(db.String(256))
+    description = db.Column(db.String(1024))
+    price = db.Column('price', db.Float)
+    quantity = db.Column('quantity', db.Integer)
 
-ns = api.namespace('product', description='Product Namespace')
-product_parser = parsers.get_product_parser()
-product_model = parsers.get_product_model()
+db.create_all()
 
-@ns.route('/initialize')
+api = Api(app, version='0.0.1', title='Inventory-Service microservice', 
+    description='inventory microservice for learning'
+)
+ns = api.namespace('product', description="Products Namespace")
+product_parser = utils.get_product_parser()
+product_model = utils.get_product_model(api)
+
+@ns.route("/api/v1/product")
 @api.doc()
-class Initialize(Resource):
-
-    @api.response(200, 'Success')
-    @api.response(500, 'Error with Database Intitialziation')
-    def get(self):
-        try:
-            db.create_all()
-        except Exception as e:
-            app.logger.error(f'Following Error Occurred {e}')
-            return jsonify({"error": e}), 500
-
-@ns.route('/product')
-@api.doc()
-class Product(Resource):
+class Products(Resource):
+    """
+    This resource represents the Product
+    """
 
     @ns.doc('list products')
     @ns.marshal_list_with(product_model)
@@ -47,7 +36,7 @@ class Product(Resource):
         return Product.query.all()
 
     @ns.doc(parser=product_parser)
-    @ns.response(200,description='success', model=product_model)
+    @ns.response(200, description="success", model=product_model)
     @ns.expect(product_model)
     @ns.marshal_with(product_model)
     def post(self):
@@ -63,10 +52,10 @@ class Product(Resource):
         db.session.commit()
         return product
 
+
 @app.route('/')
 def hello_inventory():
-    return 'Hello from inventory'
+    return "Hello From inventory Service!"
 
 if __name__ == '__main__':
-    app.run(port=8080, debug=True, host="0.0.0.0")
-
+    app.run(port=8080, host="0.0.0.0")

@@ -1,8 +1,10 @@
-from flask_restplus import reqparse, fields, Api
+from flask_restx import reqparse, fields, Api
+
 
 def get_product_parser():
     """
     This method returns the product parser
+    :return:
     """
     product_parser = reqparse.RequestParser()
     product_parser.add_argument('id', type=int)
@@ -12,9 +14,11 @@ def get_product_parser():
     product_parser.add_argument('quantity', type=int)
     return product_parser
 
-def get_product_model(api):
+
+def get_product_model(api: Api):
     """
-    Return model for API
+
+    :type api: Api
     """
     product_model = api.model('ProductModel', {
         'id': fields.Integer,
@@ -23,3 +27,4 @@ def get_product_model(api):
         'price': fields.Float,
         'quantity': fields.Integer
     })
+    return product_model

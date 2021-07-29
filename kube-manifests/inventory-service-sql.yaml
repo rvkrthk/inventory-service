@@ -69,12 +69,7 @@ spec:
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
-        - name: usermanagement-login-script
-          mountPath: /docker-entrypoint-initdb.d
       volumes:
       - name: mysql-persistent-storage
         persistentVolumeClaim:
           claimName: mysql-pv-claim
-      - name: usermanagement-login-script
-        configMap:
-          name: usermanagement-login-script
